@@ -1,6 +1,6 @@
 # Instalando os pacotes necessários
 
-pacotes <- c('tmap', 'tidyverse', 'rgdal', 'ggplot', 'raster', 'plotly', 
+pacotes <- c('tmap', 'tidyverse', 'rgdal', 'ggplot2', 'raster', 'plotly', 
              'maptools', 'sf', 'rgeos', 'sp', 'adehabitatHR', 'broom', 'knitr', 
              'kableExtra', 'gridExtra', 'RColorBrewer', 'profvis', 'png', 'grid',
              'magick', 'rgl', 'devtools', 'GISTools')
