@@ -21,13 +21,12 @@ devtools::install_github('tylermorganwall/rayshader')
 
 library(rayshader)
 
-
 # Nesse script utilizaremos alguns outros algoritmos para a Visualização de 
 # objetos espaciais
 
 # Carregando um shapefile da região Centro-oeste do BR
 shp_centro_oeste <- readOGR(dsn = 'shapefile_centrooeste', 
-                            layer = 'centrooeste_shapefile', encoding = 'UTF8')
+                            layer = 'centrooeste_shapefile', encoding = 'UTF-8')
 class(shp_centro_oeste)
 
 shp_centro_oeste@data %>% 
@@ -381,7 +380,7 @@ shp_sc_df %>%
   ylim(ylim[1], ylim[2]) +
   geom_point(aes(x = longitude, y = latitude, color = poverty), size = 1.5) +
   scale_color_gradient(name = 'Poverty', 
-                       limits = range(shp_sc_df$poverty),
+                       limits = range(shp_sc_df$poverty, na.rm = T),
                        low = "#FCB9B2", 
                        high = "#B23A48") +
   theme(axis.line = element_blank(), 
@@ -419,3 +418,25 @@ plot_gg(ggobj = mapa_pobreza,
         width = 11, 
         height = 6, scale = 300, 
         multicore = T, windowsize = c(1000, 800))
+
+# Passo 12: ajustando 'câmera' de visualização do mapa
+render_camera(fov = 70, zoom = 0.5, 
+              theta = 130, phi = 35) 
+
+# Opções de salvamento em vídeo do mapa gerado
+azimute_metade <- 30 + 60 *1/(1 + exp(seq(-7, 20, length.out = 180)/2))
+azimute_completo <- c(azimute_metade, rev(azimute_metade))
+
+rotacao <- 0 + 45 * sin(seq(0, 359, length.out = 360) * pi/180)
+
+zoom_metade <- 0.45 + 0.2 *1/(1 + exp(seq(-5, 20, length.out = 180)))
+zoom_completo <- c(zoom_metade, rev(zoom_metade))
+
+render_movie(filename = 'resultado_sc',
+             type = 'custom', 
+             frames = 360, 
+             phi = azimute_completo, 
+             zoom = zoom_completo, 
+             theta = rotacao)
+
+
