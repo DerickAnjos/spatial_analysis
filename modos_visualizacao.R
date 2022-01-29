@@ -2,7 +2,7 @@
 
 pacotes <- c("rgdal","plotly","tidyverse","knitr","kableExtra","gridExtra",
              "png","grid","magick","rgl","devtools","GISTools",
-             "tmap","broom", 'dplyr')
+             "tmap","broom", 'dplyr', 'sp', 'sf')
 
 if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
   instalador <- pacotes[!pacotes %in% installed.packages()]
@@ -440,3 +440,99 @@ render_movie(filename = 'resultado_sc',
              theta = rotacao)
 
 
+# Exemplo - terremotos na Oceania -----------------------------------------
+
+# Carregando base de dados
+load(quakes)
+
+class(quakes)
+
+# Observando os dados do objeto quakes
+quakes %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = 'striped', 
+                full_width = T, font_size = 12)
+
+# Transformando o data.frame Quakes em um objeto Simple Feature (que nada 
+# mais é que um data.frame georreferenciado)
+sf_terremotos <- st_as_sf(x = quakes, 
+                          coords = c('long', 'lat'), crs = 4326)
+
+class(sf_terremotos)
+
+# Observando os dados do objeto criado
+sf_terremotos %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = 'striped', 
+                full_width = T, font_size = 12)
+
+tm_shape(sf_terremotos) +
+  tm_dots(size = 0.5, alpha = 0.3, col = 'aquamarine4')
+
+# Gerando os gráficos estratificados pela profundidade do terremoto - 
+# estratificação por tamanho
+tm_shape(sf_terremotos) +
+  tm_bubbles(size = 'depth', 
+             scale = 1, 
+             shape = 19, 
+             col = 'aquamarine4', alpha = 0.3, title.size = '') +
+  tm_legend(title = 'Profundidade dos terremotos') +
+  tm_compass() +
+  tm_layout(legend.outside = T, 
+            legend.text.size = 0.4, title.size = 0.7, legend.outside.size = 0.4)
+
+# Gerando os gráficos estratificados pela profundidade do terremoto - 
+# estratificação por cor
+tm_shape(sf_terremotos) +
+  tm_dots(col = 'depth',
+          shape = 19, 
+          alpha = 0.5, size = 0.6, palette = 'viridis', 
+          title = 'Profundidade dos Terremotos') +
+  tm_compass()+
+  tm_layout(legend.outside = T, 
+            legend.text.size = 0.6, title.size = 0.9)
+ 
+# Plotando dois gráficos ao mesmo tempo na aba 'plots', utilizando o 'tmap'
+grid.newpage()
+
+# Passo 1: Salvando em um objeto o primeiro gráfico de interesse
+plot_01 <- tm_shape(sf_terremotos) +
+  tm_bubbles(size = 'depth', 
+             scale = 1, 
+             shape = 19, 
+             col = 'aquamarine4', alpha = 0.3, title.size = '') +
+  tm_legend(title = 'Profundidade dos terremotos') +
+  tm_compass() +
+  tm_layout(legend.outside = T, 
+            legend.text.size = 0.4, title.size = 0.7, legend.outside.size = 0.4)
+
+# Passo 2: Salvando em um objeto o segundo gráfico de interesse
+plot_02 <- tm_shape(sf_terremotos) +
+  tm_dots(col = 'depth',
+          shape = 19, 
+          alpha = 0.5, size = 0.6, palette = 'viridis', 
+          title = 'Profundidade dos Terremotos') +
+  tm_compass()+
+  tm_layout(legend.outside = T, 
+            legend.text.size = 0.6, title.size = 0.9)
+
+# Passo 3: Preparando o ambiente gráfico do R para receber 2 plotagens 
+# simultâneas
+pushViewport(
+  viewport(
+    layout = grid.layout(1,2)
+  )
+)
+
+# Passo 4: Executar as plotagens
+print(plot_01, vp = viewport(layout.pos.col = 1, height = 5))
+print(plot_02, vp = viewport(layout.pos.col = 2, height = 5))
+
+# Estabelecendo os cutoffs
+tmap_mode('view')
+
+sf_terremotos %>% 
+  filter(mag >= 6) %>% 
+  tm_shape() +
+  tm_dots(col = 'depth', shape = 19, alpha = 0.5, 
+          size = 0.2, palette = 'viridis', title = 'Profundidade dos Terremotos')
